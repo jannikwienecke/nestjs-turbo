@@ -1,16 +1,18 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+// import { ConfigModule } from '@nestjs/config';
 import { DataSource } from 'typeorm';
-import { TypeOrmModule } from '@nestjs/typeorm';
+// import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import databaseConfig from './config/database.config';
+// import databaseConfig from './config/database.config';
+
+//  TypeOrmModule.forRoot(databaseConfig()
 
 @Module({
-  imports: [ConfigModule.forRoot(), TypeOrmModule.forRoot(databaseConfig())],
+  // imports: [ConfigModule.forRoot()],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {
-  constructor(private dataSource: DataSource) {}
+  constructor() {}
 }
