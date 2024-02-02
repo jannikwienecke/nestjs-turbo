@@ -1,7 +1,8 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 
-export const createClient = (request: NextRequest) => {
+export const createClientForMiddleware = (request: NextRequest) => {
   // Create an unmodified response
   let response = NextResponse.next({
     request: {
@@ -54,8 +55,8 @@ export const createClient = (request: NextRequest) => {
           });
         },
       },
-    },
-  );
+    }
+  ) as SupabaseClient<Database>;
 
   return { supabase, response };
 };

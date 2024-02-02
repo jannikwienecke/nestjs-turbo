@@ -1,11 +1,11 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClientForServer } from "@/utils/supabase/server";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export default async function AuthButton() {
   const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = createClientForServer(cookieStore);
 
   const {
     data: { user },
@@ -15,7 +15,7 @@ export default async function AuthButton() {
     "use server";
 
     const cookieStore = cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = createClientForServer(cookieStore);
     await supabase.auth.signOut();
     return redirect("/login");
   };

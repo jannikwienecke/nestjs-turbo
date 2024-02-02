@@ -1,60 +1,106 @@
-// app/posts.jsx
 "use client";
+import {
+  createProjectController,
+  deleteProjectController,
+} from "@/app/api/createProject/controller";
+import { usePageStore } from "@/app/lib/page-store";
 
-import { getAllProjects } from "@/api";
-import { createClient } from "@/utils/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { atom, useAtom } from "jotai";
-import { atomWithQuery } from "jotai-tanstack-query";
-import { useHydrateAtoms } from "jotai/utils";
+import { atom, useSetAtom } from "jotai";
+import React from "react";
 
-const userAtom = atomWithQuery((get) => ({
-  queryKey: ["posts"],
-  queryFn: getProjectsClient,
-}));
-
-const countAtom = atom<{ title: string }[]>([]);
-countAtom.debugLabel = "count";
-
-const projectCountAtom = atom((get) => {
-  const projects = get(countAtom);
-  return projects.length;
-});
-
-projectCountAtom.debugLabel = "projectCount";
-
-export const getProjectsClient = async () => {
-  const client = createClient();
-
-  return getAllProjects(client);
-};
-
-export default function Projectlist() {
-  const { data } = useQuery({
-    queryKey: ["posts"],
-    queryFn: getProjectsClient,
-  });
-
-  useHydrateAtoms(data?.data ? [[countAtom, data.data]] : []);
-
-  return <Test />;
+interface State {
+  projects: { title: string }[];
 }
 
-const Test = () => {
-  const [count] = useAtom(countAtom);
-  const [projectCount] = useAtom(projectCountAtom);
+const stateAtom = atom<State>({
+  projects: [],
+});
 
-  console.log({ count: count.length });
+export const Projectlist = ({ projects }: { projects: any[] }) => {
+  const setStateAtom = useSetAtom(stateAtom);
+
+  React.useEffect(() => {
+    setStateAtom({ projects });
+  }, [projects, setStateAtom]);
+
+  return <ProjectListContent projects={projects} />;
+};
+
+const myAction = async (props: { title: string }) => {
+  return createProjectController(null, {
+    title: props.title,
+  });
+};
+
+const _delete = async (props: { title: string }) => {
+  return deleteProjectController({
+    title: props.title,
+  });
+};
+
+const ProjectListContent = ({ projects }: { projects: any[] }) => {
+  const { atomState, execute, isLoading, error } = usePageStore({
+    stateAtom,
+    actions: {
+      create: myAction,
+      delete: _delete,
+    },
+  });
+
+  const handleClick = ({ title }: { title: string }) => {
+    execute("create", { title }, (state) => ({
+      ...state,
+      projects: [{ title }, ...state.projects],
+    }));
+  };
+
+  const handleDelee = ({ title }: { title: string }) => {
+    execute("delete", { title }, (state) => ({
+      ...state,
+      projects: state.projects.filter((project) => project.title !== title),
+    }));
+  };
+
+  const projects_ = atomState.projects.length
+    ? atomState.projects
+    : projects || [];
   return (
-    <div>
+    <>
+      {error && <div>error...</div>}
+      <form className="flex flex-col gap-4">
+        <label htmlFor="title">Title</label>
+        <input
+          type="text"
+          name="title"
+          id="title"
+          className="border-2 border-gray-200 rounded-md p-2"
+        />
+        <button
+          disabled={isLoading}
+          formAction={async (formData) => {
+            const title = formData.get("title") as string;
+            handleClick({ title });
+          }}
+          type="submit"
+          className="bg-blue-500 text-white rounded-md p-2"
+        >
+          Add Project
+        </button>
+      </form>
+
       <ul>
-        {count.map((item) => (
-          <li key={item.title}>{item.title}</li>
+        {projects_.map((project) => (
+          <li key={project.title}>
+            {project.title}
+            <button
+              disabled={isLoading}
+              onClick={() => handleDelee({ title: project.title })}
+            >
+              delete
+            </button>
+          </li>
         ))}
       </ul>
-      <div>
-        <h1>Project Count: {projectCount}</h1>
-      </div>
-    </div>
+    </>
   );
 };

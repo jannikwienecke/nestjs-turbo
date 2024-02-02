@@ -4,6 +4,9 @@
   "pipeline": {
     "build": {
       "outputs": ["dist/**"]
+    },
+     "dev": {
+      "dotEnv": [".env.local", ".env.local", ".env.development", ".env"]
     }
   }
 }

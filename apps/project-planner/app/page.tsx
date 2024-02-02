@@ -1,19 +1,20 @@
-import Projectlist from "@/components/ProjectList";
-import { createClient } from "@/utils/supabase/server";
-import {
-  HydrationBoundary,
-  QueryClient,
-  QueryClientProvider,
-  dehydrate,
-} from "@tanstack/react-query";
+import { Projectlist } from "@/components/ProjectList";
+import { createClientForServer } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { DevTools } from "jotai-devtools";
-import { getAllProjects } from "@/api";
+import { getAllProjects } from "@/api/api";
+
+const p: Project = {
+  title: "title",
+  id: 12,
+  created_at: "description",
+};
+
+console.log(p);
 
 export default async function Index() {
   const cookieStore = cookies();
-  const client = createClient(cookieStore);
+  const client = createClientForServer(cookieStore);
   const { data, error } = await client.auth.getUser();
   console.log(data);
 
@@ -21,18 +22,11 @@ export default async function Index() {
     redirect("/");
   }
 
-  const queryClient = new QueryClient();
-
-  await queryClient.prefetchQuery({
-    queryKey: ["posts"],
-    queryFn: () => getAllProjects(client),
-  });
-
+  const projects = (await getAllProjects(client)).data;
+  if (!projects) return null;
   return (
     <div className="flex-1 w-full flex flex-col gap-20 items-center">
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        <Projectlist />
-      </HydrationBoundary>
+      <Projectlist projects={projects} />
     </div>
   );
 }
